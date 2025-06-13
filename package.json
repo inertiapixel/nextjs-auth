@@ -1,0 +1,53 @@
+{
+  "name": "@your-scope/nextjs-auth",
+  "version": "1.0.0",
+  "description": "A reusable Next.js authentication package supporting credentials, OTP, and OAuth login.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "type": "module",
+  "keywords": [
+    "nextjs",
+    "auth",
+    "authentication",
+    "oauth",
+    "otp",
+    "credentials",
+    "react",
+    "hooks",
+    "auth-provider"
+  ],
+  "author": "Md Asif",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-scope/nextjs-auth"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "next": ">=13.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "dependencies": {
+    "jwt-decode": "^4.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^8.57.1",
+    "@types/node": "^20.0.0",
+    "eslint": "^9.28.0",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.2.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.34.0"
+  }
+}
