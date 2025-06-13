@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useState, useEffect, FC, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { getToken, setToken, removeToken } from '../utils/tokenStorage';
 import { parseToken } from '../utils/tokenUtils';
 import {
@@ -20,15 +20,13 @@ import {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
-
   if (!config.apiBaseUrl) {
     throw new Error(
       '[nextjs-auth] Missing required "apiBaseUrl". Please set NEXT_PUBLIC_API_BASE_URI in your environment variables.'
     );
   }
-  
+
   const tokenKey = config?.tokenKey || 'token';
-  // const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   const API_BASE_URL = config.apiBaseUrl;
   const loginEndpoint = config.apiEndpoints?.login || '/auth/login';
   const logoutEndpoint = config.apiEndpoints?.logout || '/auth/logout';
@@ -39,7 +37,6 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     initializeAuth();
@@ -64,13 +61,11 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
     setIsAuthenticated(true);
     config?.onLoginSuccess?.(decodedUser);
 
-    // const redirectUrl = searchParams.get('redirectTo') || '/';
     const redirectUrl = localStorage.getItem('redirectTo') || '/';
     localStorage.removeItem('redirectTo');
 
     router.push(redirectUrl);
-
-  }, [tokenKey, config, router, searchParams]);
+  }, [tokenKey, config, router]);
 
   const handleAuthFailure = useCallback((error: unknown) => {
     setIsAuthenticated(false);
@@ -100,11 +95,6 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
     throw new Error('Invalid login method.');
   };
 
-  type PopupControl = {
-    authUrl: string;
-    popup: Window | null;
-  };
-
   const socialLogin = useCallback((provider: SocialProvider): Promise<void> => {
     return new Promise((resolve, reject: (reason: Error) => void) => {
       setLoginError(null);
@@ -121,7 +111,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
   const initializeSocialLoginPopup = (
     provider: SocialProvider,
     reject: (reason: Error) => void
-  ): PopupControl => {
+  ): { authUrl: string; popup: Window | null } => {
     const { authUrl } = getSocialLoginConfig(provider);
 
     const popup = window.open(
@@ -141,16 +131,13 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
 
   const getSocialLoginConfig = (provider: SocialProvider) => {
     const providerConfig = config.socialProviders?.find((p) => p.provider === provider);
-    console.log('providerConfig', providerConfig);
 
     if (!providerConfig) {
       throw new Error(`Missing social provider config for ${provider}`);
     }
 
     const clientId = providerConfig.clientId;
-    // const redirectUri = `${window.location.origin}/api/auth/${provider}`;
     const redirectUri = `${window.location.origin}/api/auth/${provider}?apiBaseUrl=${encodeURIComponent(API_BASE_URL)}`;
-    console.log('redirectUri',redirectUri);
     const authUrl = buildOAuthUrl(provider, clientId, redirectUri);
 
     return { clientId, redirectUri, authUrl };
@@ -161,14 +148,12 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
       google: 'https://accounts.google.com/o/oauth2/v2/auth',
       facebook: 'https://www.facebook.com/v18.0/dialog/oauth',
       linkedin: 'https://www.linkedin.com/oauth/v2/authorization',
-
-      //implement twitter, github etc
     }[provider];
 
     const scopeMap: Record<SocialProvider, string> = {
       google: 'profile email',
       facebook: 'email public_profile',
-      linkedin: 'openid profile email'
+      linkedin: 'openid profile email',
     };
 
     const state = 'demo_state_123';
@@ -192,7 +177,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
     reject: (reason: Error) => void
   ) => {
     if (!popup) return;
-  
+
     const popupCheckInterval = setInterval(() => {
       if (popup.closed) {
         clearInterval(popupCheckInterval);
@@ -200,27 +185,25 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
         handleSocialLoginError(err, provider, reject);
       }
     }, 500);
-  
+
     const messageHandler = (event: MessageEvent<AuthResponse>) => {
       if (event.origin !== window.location.origin) return;
-  
+
       const payload = event.data;
-        window.removeEventListener('message', messageHandler);
-        clearInterval(popupCheckInterval);
-        popup?.close();
-  
-        if (payload.isAuthenticated && payload.accessToken) {
-          
-          handleAuthSuccess(payload);
-          resolve();
-        } else {
-          handleAuthFailure(payload);
-        }
+      window.removeEventListener('message', messageHandler);
+      clearInterval(popupCheckInterval);
+      popup?.close();
+
+      if (payload.isAuthenticated && payload.accessToken) {
+        handleAuthSuccess(payload);
+        resolve();
+      } else {
+        handleAuthFailure(payload);
+      }
     };
-  
+
     window.addEventListener('message', messageHandler);
   };
-  
 
   const handleSocialLoginError = (
     error: Error,
@@ -272,7 +255,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
     login,
     logout,
     loginError,
-    socialLogin
+    socialLogin,
   };
 
   return (
