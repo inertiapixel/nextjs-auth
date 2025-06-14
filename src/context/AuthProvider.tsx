@@ -16,6 +16,7 @@ import {
   loginWithCredentials,
   loginWithOTP,
 } from '../utils/auth';
+import { SuspenseWrapper } from '../components/SuspenseWrapper';
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -260,7 +261,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
 
   return (
     <AuthContext.Provider value={contextValue}>
-      {children}
+      <SuspenseWrapper>{children}</SuspenseWrapper>
     </AuthContext.Provider>
   );
 };

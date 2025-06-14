@@ -1,6 +1,6 @@
 {
   "name": "@inertiapixel/nextjs-auth",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A reusable Next.js authentication package supporting credentials, OTP, and OAuth login.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
