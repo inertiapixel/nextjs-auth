@@ -21,13 +21,15 @@ import { SuspenseWrapper } from '../components/SuspenseWrapper';
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
+
   if (!config.apiBaseUrl) {
     throw new Error(
-      '[nextjs-auth] Missing required "apiBaseUrl". Please set NEXT_PUBLIC_API_BASE_URI in your environment variables.'
+      '[nextjs-auth] Missing required "apiBaseUrl". Please set NEXT_PUBLIC_API_BASE_URI in your environment variables and pass it to AuthProvider.'
     );
   }
 
   const tokenKey = config?.tokenKey || 'token';
+  
   const API_BASE_URL = config.apiBaseUrl;
   const loginEndpoint = config.apiEndpoints?.login || '/auth/login';
   const logoutEndpoint = config.apiEndpoints?.logout || '/auth/logout';
@@ -76,6 +78,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
   }, [config]);
 
   const login = useCallback(async (credentials: LoginPayload): Promise<void> => {
+    
     setLoginError(null);
     try {
       const response = await handleLoginMethod(credentials);
@@ -138,10 +141,12 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
     }
 
     const clientId = providerConfig.clientId;
-    const redirectUri = `${window.location.origin}/api/auth/${provider}?apiBaseUrl=${encodeURIComponent(API_BASE_URL)}`;
-    const authUrl = buildOAuthUrl(provider, clientId, redirectUri);
+    // const redirectUri = `${window.location.origin}/api/auth/${provider}?apiBaseUrl=${encodeURIComponent(API_BASE_URL)}`;
+    const redirectUriNextJs = `${window.location.origin}/api/auth/${provider}`;
+    // console.log('redirectUriredirectUri:::',redirectUriNextJs);
+    const authUrl = buildOAuthUrl(provider, clientId, redirectUriNextJs);
 
-    return { clientId, redirectUri, authUrl };
+    return { clientId, redirectUriNextJs, authUrl };
   };
 
   const buildOAuthUrl = (provider: SocialProvider, clientId: string, redirectUri: string): string => {
