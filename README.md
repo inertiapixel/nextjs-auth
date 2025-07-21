@@ -18,7 +18,7 @@
 - [Installation](#installation)
 - [Environment Variables](#environment-variables)
 - [Quick Start](#quick-start)
-- [Hooks & Events](#hooks-events)
+- [Hooks and Events](#hooks-and-events)
 - [Backend Package Information](#backend-package-information)
 - [License](#license)
 - [Related Projects](#related-projects)
@@ -222,7 +222,7 @@ const OrdersPage: FC = (): ReactElement => {
 export default withAuth(OrdersPage);
 ```
 
-## Hooks & Events
+## Hooks and Events
 These optional callbacks are available via AuthProvider:
 
 ```tsx
