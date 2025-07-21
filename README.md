@@ -276,6 +276,7 @@ import type { LoginPayload, User } from '@inertiapixel/nextjs-auth';
 Login page example
 
 ```tsx
+//login/page.txs
 'use client';
 
 import { useState } from 'react';
