@@ -18,9 +18,8 @@
 - [Installation](#installation)
 - [Environment Variables](#environment-variables)
 - [Quick Start](#quick-start)
-- [Hooks Supported (Optional)](#hooks-supported-optional)
-- [Bring Your Own Database](#bring-your-own-database)
-- [Frontend Package Information](#frontend-package-information)
+- [Hooks & Events](#hooks-&-events)
+- [Backend Package Information](#backend-package-information)
 - [License](#license)
 - [Related Projects](#related-projects)
 
