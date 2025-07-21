@@ -18,7 +18,7 @@
 - [Installation](#installation)
 - [Environment Variables](#environment-variables)
 - [Quick Start](#quick-start)
-- [Hooks & Events](#hooks-&-events)
+- [Hooks & Events](#hooks-events)
 - [Backend Package Information](#backend-package-information)
 - [License](#license)
 - [Related Projects](#related-projects)
