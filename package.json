@@ -1,6 +1,6 @@
 {
   "name": "@inertiapixel/nextjs-auth",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Authentication system for Next.js. Supports credentials and social login, JWT token management, and lifecycle hooks — designed to integrate with nodejs-auth for full-stack MERN apps.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
