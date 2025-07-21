@@ -24,7 +24,6 @@
     "auth-provider",
     "social-auth"
   ],
-  "author": "Md Asif",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
@@ -49,6 +48,11 @@
     "globals": "^16.2.0",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.34.0"
+  },
+  "author": {
+    "name": "Md Asif",
+    "email": "mdasiff007@gmail.com",
+    "url": "https://github.com/mdasiff007"
   },
   "repository": {
     "type": "git",
