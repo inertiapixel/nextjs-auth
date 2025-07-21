@@ -1,0 +1,18 @@
+# Exclude source code and dev files
+src/
+.vscode/
+tests/
+node_modules/
+coverage/
+*.log
+*.ts
+*.tsx
+*.test.js
+*.test.ts
+
+# Exclude config/dev tools
+tsconfig.json
+jest.config.js
+vitest.config.ts
+.env
+.env.*
