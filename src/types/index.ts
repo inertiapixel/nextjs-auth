@@ -44,7 +44,7 @@ export interface AuthContextType {
   login: (credentials: LoginPayload) => Promise<void>;
   socialLogin: (payload: SocialProvider) => void;
   logout: () => void;
-  loginError: string | null;
+  loginError: Record<string, unknown> | null;
 }
 
 export interface OAuthProviderConfig {

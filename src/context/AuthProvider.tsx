@@ -37,7 +37,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginError, setLoginError] = useState<Record<string, unknown> | null>(null);
 
   const router = useRouter();
 
@@ -71,11 +71,24 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
   }, [tokenKey, config, router]);
 
   const handleAuthFailure = useCallback((error: unknown) => {
+
+    console.error('handleAuthFailure', error);
+
     setIsAuthenticated(false);
-    const message = error instanceof Error ? error.message : 'Login failed';
-    setLoginError(message);
-    config?.onLoginFail?.(message);
+  
+    if (
+      typeof error === 'object' &&
+      error !== null
+    ) {
+      setLoginError(error as Record<string, unknown>);
+      config?.onLoginFail?.((error as { message: string }).message);
+    } else {
+      setLoginError({ message: 'Login failed' });
+      config?.onLoginFail?.('Login failed');
+    }
   }, [config]);
+
+  
 
   const login = useCallback(async (credentials: LoginPayload): Promise<void> => {
     
@@ -89,15 +102,36 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
   }, [handleAuthSuccess, handleAuthFailure]);
 
   const handleLoginMethod = async (credentials: LoginPayload): Promise<AuthResponse> => {
+    const errors: Record<string, string> = {};
+  
     if (credentials.provider === 'credentials') {
-      if (!credentials.password) throw new Error('Password is required.');
+      if (!credentials.email) errors.email = 'Email is required.';
+      if (!credentials.password) errors.password = 'Password is required.';
+  
+      if (Object.keys(errors).length > 0) {
+        throw { type: 'validation', errors };
+      }
+  
       return await loginWithCredentials(`${API_BASE_URL}${loginEndpoint}`, credentials);
-    } else if (credentials.provider === 'otp') {
-      if (!credentials.otp) throw new Error('OTP is required.');
+    }
+  
+    if (credentials.provider === 'otp') {
+      if (!credentials.otp) errors.otp = 'OTP is required.';
+  
+      if (Object.keys(errors).length > 0) {
+        throw { type: 'validation', errors };
+      }
+  
       return await loginWithOTP(`${API_BASE_URL}${loginEndpoint}`, credentials);
     }
-    throw new Error('Invalid login method.');
+  
+    throw {
+      type: 'invalid_method',
+      message: 'Invalid login method.',
+    };
+
   };
+  
 
   const socialLogin = useCallback((provider: SocialProvider): Promise<void> => {
     return new Promise((resolve, reject: (reason: Error) => void) => {
@@ -216,7 +250,12 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
     provider: SocialProvider,
     reject: (reason: Error) => void
   ) => {
-    setLoginError(error.message);
+    setLoginError({
+      message: error.message,
+      name: error.name,
+      provider,
+    });
+  
     config?.onLoginFail?.(error.message);
     reject(error);
   };

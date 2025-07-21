@@ -10,6 +10,7 @@ interface HandlerConfig {
 
 export const handlers = ({ apiBaseUrl }: HandlerConfig) =>
   async function handler(req: NextRequest): Promise<NextResponse> {
+    console.log('handlers hit');
     const segments = req.nextUrl.pathname.split('/');
     const provider = segments[segments.length - 1] as Provider;
 
@@ -39,6 +40,7 @@ export const handlers = ({ apiBaseUrl }: HandlerConfig) =>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code }),
       });
+
 
       const data = await res.json();
 
