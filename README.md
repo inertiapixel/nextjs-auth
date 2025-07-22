@@ -186,6 +186,20 @@ export default function RootLayout({
 
 ```
 
+### Next.js API Setup (App Router)
+To handle OAuth callback redirects from social providers, you must add the following API route to your Next.js app:
+
+```tsx
+// app/api/auth/[...provider]/route.ts
+
+import { handlers } from '@inertiapixel/nextjs-auth';
+
+export const GET = handlers({
+  apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL!
+});
+
+```
+
 ---
 
 ## Usage
@@ -221,57 +235,6 @@ const OrdersPage: FC = (): ReactElement => {
 
 export default withAuth(OrdersPage);
 ```
-
-## Hooks and Events
-These optional callbacks are available via AuthProvider:
-
-```tsx
-<AuthProvider
-  onLoginSuccess={(user) => console.log('Welcome', user)}
-  onLoginFail={(error) => console.warn('Login error', error)}
-  onLogout={() => console.log('Logged out')}
-/>
-```
-
-## API Reference
-`useAuth()`
-Returns the following:
-
-```ts
-{
-  user: User | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  login: (payload: LoginPayload) => Promise<void>;
-  logout: () => void;
-  socialLogin: (provider: SocialProvider) => void;
-  loginError: Record<string, unknown> | null;
-}
-```
-
-`login(payload)`
-
-```ts
-login({
-  email: 'john@example.com',
-  password: '123456',
-  provider: 'credentials'
-});
-```
-
-`socialLogin(provider)`
-
-```ts
-socialLogin('google'); // or 'facebook', 'linkedin'
-```
-
-## Types
-You can import types like:
-
-```ts
-import type { LoginPayload, User } from '@inertiapixel/nextjs-auth';
-```
-
 ## Login
 Login page example
 
@@ -400,6 +363,56 @@ const LoginPage = () => {
 
 export default LoginPage;
 
+```
+
+## Hooks and Events
+These optional callbacks are available via AuthProvider:
+
+```tsx
+<AuthProvider
+  onLoginSuccess={(user) => console.log('Welcome', user)}
+  onLoginFail={(error) => console.warn('Login error', error)}
+  onLogout={() => console.log('Logged out')}
+/>
+```
+
+## API Reference
+`useAuth()`
+Returns the following:
+
+```ts
+{
+  user: User | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  login: (payload: LoginPayload) => Promise<void>;
+  logout: () => void;
+  socialLogin: (provider: SocialProvider) => void;
+  loginError: Record<string, unknown> | null;
+}
+```
+
+`login(payload)`
+
+```ts
+login({
+  email: 'john@example.com',
+  password: '123456',
+  provider: 'credentials'
+});
+```
+
+`socialLogin(provider)`
+
+```ts
+socialLogin('google'); // or 'facebook', 'linkedin'
+```
+
+## Types
+You can import types like:
+
+```ts
+import type { LoginPayload, User } from '@inertiapixel/nextjs-auth';
 ```
 
 ---
