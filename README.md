@@ -212,7 +212,7 @@ export const GET = handlers({
 
 Access auth state anywhere using the useAuth() hook:
 ```tsx
-//Orders.tsx or Dashboard.tsx (its protected page)
+//orders/page.tsx or dashboard/page.tsx (its protected page)
 'use client';
 
 import { useAuth, withAuth } from '@inertiapixel/nextjs-auth';
