@@ -87,7 +87,7 @@ NEXT_PUBLIC_LINKEDIN_CLIENT_ID=86eg5q2n2qfqde
 
 Make AuthProvider
 ```tsx
-//Providers.tsx
+//providers.tsx
 'use client';
 
 import React from 'react';
@@ -195,7 +195,7 @@ Access auth state anywhere using the useAuth() hook:
 //Orders.tsx or Dashboard.tsx (its protected page)
 'use client';
 
-import { useAuth, withAuth } from '@your-scope/nextjs-auth';
+import { useAuth, withAuth } from '@inertiapixel/nextjs-auth';
 import type { ReactElement, FC } from 'react';
 
 const OrdersPage: FC = (): ReactElement => {
@@ -280,7 +280,7 @@ Login page example
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@your-scope/nextjs-auth';
+import { useAuth } from '@inertiapixel/nextjs-auth';
 
 const LoginPage = () => {
   const { login, socialLogin, loginError, loading } = useAuth();
