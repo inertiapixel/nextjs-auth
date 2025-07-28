@@ -72,20 +72,21 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
 
   const handleAuthFailure = useCallback((error: unknown) => {
 
-    console.error('handleAuthFailure', error);
+    console.error('handleAuthFailure1', error);
 
     setIsAuthenticated(false);
-  
-    if (
-      typeof error === 'object' &&
-      error !== null
-    ) {
-      setLoginError(error as Record<string, unknown>);
-      config?.onLoginFail?.((error as { message: string }).message);
-    } else {
-      setLoginError({ message: 'Login failed' });
-      config?.onLoginFail?.('Login failed');
-    }
+    setLoginError(error as Record<string, unknown>);
+    config?.onLoginFail?.((error as { message: string }).message);
+    // if (
+    //   typeof error === 'object' &&
+    //   error !== null
+    // ) {
+    //   setLoginError(error as Record<string, unknown>);
+    //   config?.onLoginFail?.((error as { message: string }).message);
+    // } else {
+    //   setLoginError({ message: 'Login failed' });
+    //   config?.onLoginFail?.('Login failed');
+    // }
   }, [config]);
 
   
