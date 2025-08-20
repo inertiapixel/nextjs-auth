@@ -1,3 +1,4 @@
+//src/hooks/useAuth.ts
 'use client';
 
 import { useContext, useState, useEffect } from 'react';
@@ -46,9 +47,9 @@ export const useAuth = (redirectIfNotAuthenticated = '/login') => {
     }
   }, [loading, isAuthenticated, redirectIfNotAuthenticated, router, current, full]);
 
-  const getToken = async () => {
-    return localStorage.getItem('token') || '';
-  };
+  // const getToken = async () => {
+  //   return localStorage.getItem('token') || '';
+  // };
 
 
   return {
@@ -56,7 +57,7 @@ export const useAuth = (redirectIfNotAuthenticated = '/login') => {
     isAuthenticated,
     loading,
     isLoaded,
-    getToken,
+    // getToken,
     loginError,
     login,
     logout,

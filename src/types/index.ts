@@ -70,6 +70,7 @@ export interface AuthProviderProps {
     apiBaseUrl?: string;
     apiEndpoints?:{
       login: string;
+      refresh: string;
       register: string;
       logout: string;
     };

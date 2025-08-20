@@ -1,4 +1,4 @@
-//Main config & entery
+//src/index.ts
 export * from './context/AuthProvider';
 
 //Hooks

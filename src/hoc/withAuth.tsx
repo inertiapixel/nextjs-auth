@@ -1,3 +1,4 @@
+//src/hoc/withAuth.tsx
 'use client';
 
 import React, { ComponentType, FC } from 'react';

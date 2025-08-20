@@ -1,8 +1,8 @@
+// src/context/AuthProvider.tsx
 'use client';
 
 import { createContext, useState, useEffect, FC, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { getToken, setToken, removeToken } from '../utils/tokenStorage';
 import { parseToken } from '../utils/tokenUtils';
 import {
   AuthContextType,
@@ -10,7 +10,7 @@ import {
   User,
   AuthResponse,
   LoginPayload,
-  SocialProvider
+  SocialProvider,
 } from '../types';
 import {
   loginWithCredentials,
@@ -21,19 +21,19 @@ import { SuspenseWrapper } from '../components/SuspenseWrapper';
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
-
   if (!config.apiBaseUrl) {
     throw new Error(
       '[nextjs-auth] Missing required "apiBaseUrl". Please set NEXT_PUBLIC_API_BASE_URI in your environment variables and pass it to AuthProvider.'
     );
   }
 
-  const tokenKey = config?.tokenKey || 'token';
-  
   const API_BASE_URL = config.apiBaseUrl;
   const loginEndpoint = config.apiEndpoints?.login || '/auth/login';
   const logoutEndpoint = config.apiEndpoints?.logout || '/auth/logout';
+  const refreshEndpoint = config.apiEndpoints?.refresh || '/auth/refresh';
 
+  // 🔐 Memory-based state only
+  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -41,98 +41,107 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
 
   const router = useRouter();
 
+  // Try session restore on mount using refresh cookie
   useEffect(() => {
-    initializeAuth();
-  }, [tokenKey]);
+    const tryRefresh = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}${refreshEndpoint}`, {
+          method: 'POST',
+          credentials: 'include', // important: send cookies
+        });
 
-  const initializeAuth = () => {
-    const token = getToken(tokenKey);
-    if (token) {
-      const decodedUser = parseToken(token);
-      setUser(decodedUser);
-      setIsAuthenticated(!!decodedUser);
-    }
-    setLoading(false);
-  };
+        if (!res.ok) throw new Error('Not authenticated');
 
-  const handleAuthSuccess = useCallback((response: AuthResponse) => {
-    if (!response.accessToken) throw new Error('Access token missing in response.');
+        const data: AuthResponse = await res.json();
+        if (data.accessToken) {
+          const decodedUser = parseToken(data.accessToken);
+          setToken(data.accessToken);
+          setUser(decodedUser || data.user || null);
+          setIsAuthenticated(true);
+        }
+      } catch (err) {
+        console.error("Session refresh failed:", err);
+        setToken(null);
+        setUser(null);
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    const decodedUser = parseToken(response.accessToken);
-    setToken(tokenKey, response.accessToken);
-    setUser(decodedUser || response.user || null);
-    setIsAuthenticated(true);
-    config?.onLoginSuccess?.(decodedUser);
+    tryRefresh();
+  }, [API_BASE_URL, refreshEndpoint]);
 
-    const redirectUrl = localStorage.getItem('redirectTo') || '/';
-    localStorage.removeItem('redirectTo');
+  const handleAuthSuccess = useCallback(
+    (response: AuthResponse) => {
+      if (!response.accessToken) throw new Error('Access token missing in response.');
 
-    router.push(redirectUrl);
-  }, [tokenKey, config, router]);
+      const decodedUser = parseToken(response.accessToken);
+      setToken(response.accessToken); // store in memory only
+      setUser(decodedUser || response.user || null);
+      setIsAuthenticated(true);
 
-  const handleAuthFailure = useCallback((error: unknown) => {
+      config?.onLoginSuccess?.(decodedUser);
 
-    console.error('handleAuthFailure1', error);
+      // 🔄 redirect if config provides
+      const redirectUrl = config?.redirectTo || '/';
+      router.push(redirectUrl);
+    },
+    [config, router]
+  );
 
-    setIsAuthenticated(false);
-    setLoginError(error as Record<string, unknown>);
-    config?.onLoginFail?.((error as { message: string }).message);
-    // if (
-    //   typeof error === 'object' &&
-    //   error !== null
-    // ) {
-    //   setLoginError(error as Record<string, unknown>);
-    //   config?.onLoginFail?.((error as { message: string }).message);
-    // } else {
-    //   setLoginError({ message: 'Login failed' });
-    //   config?.onLoginFail?.('Login failed');
-    // }
-  }, [config]);
+  const handleAuthFailure = useCallback(
+    (error: unknown) => {
+      console.error('handleAuthFailure', error);
+      setIsAuthenticated(false);
+      setLoginError(error as Record<string, unknown>);
+      config?.onLoginFail?.((error as { message: string })?.message || 'Login failed');
+    },
+    [config]
+  );
 
-  
-
-  const login = useCallback(async (credentials: LoginPayload): Promise<void> => {
-    
-    setLoginError(null);
-    try {
-      const response = await handleLoginMethod(credentials);
-      handleAuthSuccess(response);
-    } catch (error) {
-      handleAuthFailure(error);
-    }
-  }, [handleAuthSuccess, handleAuthFailure]);
+  const login = useCallback(
+    async (credentials: LoginPayload): Promise<void> => {
+      setLoginError(null);
+      try {
+        const response = await handleLoginMethod(credentials);
+        handleAuthSuccess(response);
+      } catch (error) {
+        handleAuthFailure(error);
+      }
+    },
+    [handleAuthSuccess, handleAuthFailure]
+  );
 
   const handleLoginMethod = async (credentials: LoginPayload): Promise<AuthResponse> => {
     const errors: Record<string, string> = {};
-  
+
     if (credentials.provider === 'credentials') {
       if (!credentials.email) errors.email = 'Email is required.';
       if (!credentials.password) errors.password = 'Password is required.';
-  
+
       if (Object.keys(errors).length > 0) {
         throw { type: 'validation', errors };
       }
-  
+
       return await loginWithCredentials(`${API_BASE_URL}${loginEndpoint}`, credentials);
     }
-  
+
     if (credentials.provider === 'otp') {
       if (!credentials.otp) errors.otp = 'OTP is required.';
-  
+
       if (Object.keys(errors).length > 0) {
         throw { type: 'validation', errors };
       }
-  
+
       return await loginWithOTP(`${API_BASE_URL}${loginEndpoint}`, credentials);
     }
-  
+
     throw {
       type: 'invalid_method',
       message: 'Invalid login method.',
     };
-
   };
-  
 
   const socialLogin = useCallback((provider: SocialProvider): Promise<void> => {
     return new Promise((resolve, reject: (reason: Error) => void) => {
@@ -141,7 +150,8 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
         const { popup } = initializeSocialLoginPopup(provider, reject);
         setupPopupMonitoring(popup, provider, resolve, reject);
       } catch (error) {
-        const err = error instanceof Error ? error : new Error('Social login initialization failed');
+        const err =
+          error instanceof Error ? error : new Error('Social login initialization failed');
         reject(err);
       }
     });
@@ -176,9 +186,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
     }
 
     const clientId = providerConfig.clientId;
-    // const redirectUri = `${window.location.origin}/api/auth/${provider}?apiBaseUrl=${encodeURIComponent(API_BASE_URL)}`;
     const redirectUriNextJs = `${window.location.origin}/api/auth/${provider}`;
-    // console.log('redirectUriredirectUri:::',redirectUriNextJs);
     const authUrl = buildOAuthUrl(provider, clientId, redirectUriNextJs);
 
     return { clientId, redirectUriNextJs, authUrl };
@@ -256,7 +264,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
       name: error.name,
       provider,
     });
-  
+
     config?.onLoginFail?.(error.message);
     reject(error);
   };
@@ -269,23 +277,21 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
     } finally {
       cleanupAfterLogout();
     }
-  }, [tokenKey, API_BASE_URL, logoutEndpoint, config, router]);
+  }, [API_BASE_URL, logoutEndpoint, config, router]);
 
   const performLogoutRequest = async (): Promise<void> => {
-    const token = getToken(tokenKey);
-    if (token) {
-      await fetch(`${API_BASE_URL}${logoutEndpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-    }
+    await fetch(`${API_BASE_URL}${logoutEndpoint}`, {
+      method: 'POST',
+      credentials: 'include', // important: clears refresh cookie
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
   };
 
   const cleanupAfterLogout = (): void => {
-    removeToken(tokenKey);
+    setToken(null);
     setUser(null);
     setIsAuthenticated(false);
     config?.onLogout?.();
