@@ -1,13 +1,16 @@
 <p align="center">
   <br/>
   <a href="https://www.inertiapixel.com/" target="_blank"><img width="150px" src="https://www.inertiapixel.com/images/logo-min.svg" /></a>
-  <h3 align="center">@inertiapixel/nexts-auth</h3>
+  <h3 align="center">@inertiapixel/nextjs-auth</h3>
   <p align="center">Next.js + Node.js Auth for MERN</p>
   <p align="center">Open Source. Full Stack</p>
 </p>
 
 **InertiaPixel nextjs-auth** is an open-source authentication system for Next.js. It handles credential and social login flows, maintains persistent auth state, manages redirects and protected routes, and provides hooks for login/logout lifecycle events — designed to integrate seamlessly with nodejs-auth for full-stack MERN apps.
 
+⚡ Secure by default: Tokens are stored in HttpOnly cookies.
+
+No `localStorage` or `sessionStorage` needed, making it XSS-safe.
 
 ![npm](https://img.shields.io/npm/v/@inertiapixel/nextjs-auth)
 ![MIT License](https://img.shields.io/npm/l/@inertiapixel/nextjs-auth)
@@ -46,6 +49,7 @@ So I decided to create a pair of authentication packages under the inertiapixel 
 
 ## Features
 
+- Secure by Default (HttpOnly cookies)
 - Auth context provider with typed hooks (useAuth)
 - Credential-based login (email & password)
 - Plug-and-play support for multiple OAuth providers (Google, Facebook, LinkedIn, etc.)
@@ -106,8 +110,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       config={{
         apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
         apiEndpoints: {
+          //Customize as per api
           login: '/auth/login',
-          register: '/register',
+          refresh: '/auth/refresh',
           logout: '/auth/logout',
         },
 
@@ -368,6 +373,7 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+
 
 ```
 
