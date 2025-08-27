@@ -96,16 +96,9 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
   
       config?.onLoginSuccess?.(decodedUser);
   
-      //Priority: check localStorage redirect first
-      let redirectUrl = "/";
-      const storedRedirect = localStorage.getItem("redirectTo");
-  
-      if (storedRedirect) {
-        redirectUrl = storedRedirect;
-        localStorage.removeItem("redirectTo"); // clear it after use
-      } else if (config?.redirectTo) {
-        redirectUrl = config.redirectTo;
-      }
+      const redirectUrl = localStorage.getItem("redirectTo") 
+        ?? config?.redirectTo 
+        ?? "/";
   
       router.push(redirectUrl);
     },
