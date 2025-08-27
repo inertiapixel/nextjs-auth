@@ -32,7 +32,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
   const logoutEndpoint = config.apiEndpoints?.logout || '/auth/logout';
   const refreshEndpoint = config.apiEndpoints?.refresh || '/auth/refresh';
 
-  // 🔐 Memory-based state only
+  // Memory-based state only
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -50,7 +50,20 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
           credentials: 'include', // important: send cookies
         });
 
-        if (!res.ok) throw new Error('Not authenticated');
+        // if (!res.ok) throw new Error('Not authenticated');
+        if (!res.ok){
+          setToken(null);
+          setUser(null);
+          setIsAuthenticated(false);
+
+          const faildRed = {
+              "provider": "credentials",
+              "isAuthenticated": false,
+              "message": "Refresh token is missing"
+          };
+
+          return faildRed;
+        };
 
         const data: AuthResponse = await res.json();
         if (data.accessToken) {
@@ -74,21 +87,31 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, config }) => {
 
   const handleAuthSuccess = useCallback(
     (response: AuthResponse) => {
-      if (!response.accessToken) throw new Error('Access token missing in response.');
-
+      if (!response.accessToken) throw new Error("Access token missing in response.");
+  
       const decodedUser = parseToken(response.accessToken);
       setToken(response.accessToken); // store in memory only
       setUser(decodedUser || response.user || null);
       setIsAuthenticated(true);
-
+  
       config?.onLoginSuccess?.(decodedUser);
-
-      // 🔄 redirect if config provides
-      const redirectUrl = config?.redirectTo || '/';
+  
+      //Priority: check localStorage redirect first
+      let redirectUrl = "/";
+      const storedRedirect = localStorage.getItem("redirectTo");
+  
+      if (storedRedirect) {
+        redirectUrl = storedRedirect;
+        localStorage.removeItem("redirectTo"); // clear it after use
+      } else if (config?.redirectTo) {
+        redirectUrl = config.redirectTo;
+      }
+  
       router.push(redirectUrl);
     },
     [config, router]
   );
+  
 
   const handleAuthFailure = useCallback(
     (error: unknown) => {
